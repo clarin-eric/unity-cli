@@ -53,11 +53,14 @@ func (hc *HttpClient) Delete(url *url.URL) (Response) {
 func (hc *HttpClient) Request(url *url.URL, method string) (Response) {
 	var response Response
 
+	t1 := time.Now()
+
 	//Build request
 	req, err := net_http.NewRequest(method, url.String(), nil)
 	if err != nil {
 		msg := fmt.Sprintf("%v", err)
 		response.ErrorMessage = &msg
+		response.ResponseTime = time.Since(t1)
 		return response
 	}
 
@@ -70,6 +73,7 @@ func (hc *HttpClient) Request(url *url.URL, method string) (Response) {
 	if err != nil {
 		msg := fmt.Sprintf("%v", err)
 		response.ErrorMessage = &msg
+		response.ResponseTime = time.Since(t1)
 		return response
 	}
 	response.Code = resp.StatusCode
@@ -77,10 +81,12 @@ func (hc *HttpClient) Request(url *url.URL, method string) (Response) {
 	if resp.StatusCode == 403 {
 		msg := "Not authorized"
 		response.ErrorMessage = &msg
+		response.ResponseTime = time.Since(t1)
 		return response
 	} else 	if resp.StatusCode == 404 {
 		msg := "Not authorized"
 		response.ErrorMessage = &msg
+		response.ResponseTime = time.Since(t1)
 		return response
 	}
 
@@ -90,8 +96,10 @@ func (hc *HttpClient) Request(url *url.URL, method string) (Response) {
 	if err != nil {
 		msg := fmt.Sprintf("%v", err)
 		response.ErrorMessage = &msg
+		response.ResponseTime = time.Since(t1)
 		return response
 	}
 
+	response.ResponseTime = time.Since(t1)
 	return response
 }

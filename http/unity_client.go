@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"net/url"
 	"errors"
+	"time"
 )
 
 type Response struct {
 	Code int
 	ErrorMessage *string
 	Body []byte
+	ResponseTime time.Duration
 }
 
 type UnityClient struct {
@@ -85,7 +87,7 @@ func (c *UnityClient) IssueRequest() (Response) {
 		u.RawQuery = c.values.Encode();
 	}
 
-	//
+	//Print request information when in verbose mode
 	if c.verbose {
 		fmt.Printf("Request:\n")
 		fmt.Printf("    Url: %s\n", u.String())
@@ -98,11 +100,12 @@ func (c *UnityClient) IssueRequest() (Response) {
 	//Print response information when in verbose mode
 	if c.verbose {
 		fmt.Printf("Response:\n")
-		fmt.Printf("    HTTP response code: %d\n", response.Code)
+		fmt.Printf("    HTTP response code : HTTP %d\n", response.Code)
+		fmt.Printf("    Response time      : %v\n", response.ResponseTime)
 		if response.ErrorMessage != nil {
 			fmt.Printf("    Error message: %s\n", response.ErrorMessage)
 		}
-		//response.Body
+		fmt.Printf("    Response length    : %d bytes\n", len(response.Body))
 		fmt.Printf("\n")
 	}
 

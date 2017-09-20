@@ -31,7 +31,8 @@ func CreateResolveCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 			}
 
 			//Process response
-			fmt.Printf("Response: %v\n", entity)
+			entity.Print()
+
 			return nil
 		},
 	}
