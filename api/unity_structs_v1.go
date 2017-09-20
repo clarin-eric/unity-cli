@@ -1,5 +1,9 @@
 package api
 
+import (
+	"fmt"
+)
+
 /*
 {
   "id" : 3,
@@ -38,7 +42,21 @@ type Entity struct {
 	State string `json:"state"`
 	Identities []Identity `json:"identities"`
 	CredentialInfo CredentialInfo `json:"credentialInfo"`
- }
+}
+
+func (e *Entity) Print() {
+	fmt.Printf("Entity:\n")
+	fmt.Printf("    id    : %d\n", e.Id)
+	fmt.Printf("    state : %s\n", e.State)
+	fmt.Printf("    Identities:\n")
+	for _, id := range e.Identities {
+		fmt.Printf("        Type id : %s\n", id.TypeId)
+		fmt.Printf("        Value   : %s\n", id.Value)
+		fmt.Printf("\n")
+	}
+	fmt.Printf("    Credential info:\n")
+	fmt.Printf("        Not supported\n")
+}
 
 type Identity struct {
 	TypeId string `json:""`

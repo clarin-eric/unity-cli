@@ -84,9 +84,6 @@ func (hc *HttpClient) Request(url *url.URL, method string) (Response) {
 		return response
 	}
 
-	if hc.verbose {
-		fmt.Printf("HTTP response code = %v\n", resp.StatusCode)
-	}
 	// Read body
 	response.Body, err = ioutil.ReadAll(resp.Body)
 	defer resp.Body.Close()

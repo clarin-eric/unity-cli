@@ -32,7 +32,7 @@ func GetNewUnityClient(base_url string, verbose bool, insecure bool, username, p
 	}
 
 	if verbose {
-		fmt.Printf("Base: %v\n", urlBase.ResolveReference(urlPath))
+		fmt.Printf("    API root url : %v\n", urlBase.ResolveReference(urlPath))
 	}
 
 	return &UnityClient{
@@ -83,10 +83,27 @@ func (c *UnityClient) IssueRequest() (Response) {
 	if c.values != nil {
 		u.RawQuery = c.values.Encode();
 	}
+
+	//
 	if c.verbose {
-		fmt.Printf("\tUrl:%s\n", u.String())
+		fmt.Printf("Request:\n")
+		fmt.Printf("    Url: %s\n", u.String())
+		fmt.Printf("\n")
 	}
 
 	//Issue request
-	return c.client.Get(u)
+	response = c.client.Get(u)
+
+	//Print response information when in verbose mode
+	if c.verbose {
+		fmt.Printf("Response:\n")
+		fmt.Printf("    HTTP response code: %d\n", response.Code)
+		if response.ErrorMessage != nil {
+			fmt.Printf("    Error message: %s\n", response.ErrorMessage)
+		}
+		//response.Body
+		fmt.Printf("\n")
+	}
+
+	return response
 }
