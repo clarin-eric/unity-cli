@@ -42,8 +42,9 @@ func GetNewUnityClient(base_url string, verbose bool, insecure bool, username, p
 	}, nil
 }
 
-func (c *UnityClient) SetPathByString(path string) (error) {
-	urlPath, err := url.Parse(path)
+func (c *UnityClient) SetPathByString(_fmt string, args ...interface{}) (error) {
+	_url := fmt.Sprintf(_fmt, args...)
+	urlPath, err := url.Parse(_url)
 	if err != nil {
 		return errors.New(fmt.Sprintf("Failed to parse url path. Error: %v", err))
 	}

@@ -42,7 +42,7 @@ func GetUnityApiV1(base_url string, verbose bool, insecure bool, username, passw
  */
 func (api *UnityApiV1) Resolve(identity_type, identity_value string) (*Entity, error) {
 	//Build url
-	api.client.SetPathByString(fmt.Sprintf("./resolve/%s/%s", identity_type, identity_value))
+	api.client.SetPathByString("./resolve/%s/%s", identity_type, identity_value)
 
 	//Issue request
 	response := api.client.IssueRequest()
@@ -66,7 +66,7 @@ func (api *UnityApiV1) Resolve(identity_type, identity_value string) (*Entity, e
 @GET
  */
 func (api *UnityApiV1) Entity(entity_id int64, identity_type *string) (*Entity, error) {
-	api.client.SetPathByString(fmt.Sprintf("./entity/%d", entity_id))
+	api.client.SetPathByString("./entity/%d", entity_id)
 	if identity_type != nil {
 		api.client.AddQueryParam("identityType", *identity_type)
 	}
