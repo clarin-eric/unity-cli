@@ -37,6 +37,7 @@ import (
 }
  */
 
+
 type Entity struct {
 	Id int64 `json:"id"`
 	State string `json:"state"`
@@ -71,4 +72,17 @@ type Identity struct {
 type CredentialInfo struct {
 	CredentialRequirementId string `json:"credentialRequirementId"`
 	CredentialsState interface{} `json:"credentialsState"` //TODO: properly implement
+}
+
+type Group struct {
+	Path string
+	SubGroups []string `json:"subGroups"`
+	Members []int64 `json:"members"`
+}
+
+func (g *Group) Print() {
+	fmt.Printf("Group:\n")
+	fmt.Printf("    path      : %v\n", g.Path)
+	fmt.Printf("    subGroups : %v\n", g.SubGroups)
+	fmt.Printf("    members   : %v\n", g.Members)
 }

@@ -76,8 +76,19 @@ func (hc *HttpClient) Request(url *url.URL, method string) (Response) {
 		response.ResponseTime = time.Since(t1)
 		return response
 	}
+
+	// Read body
+	response.Body, err = ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	if err != nil {
+		msg := fmt.Sprintf("%v", err)
+		response.ErrorMessage = &msg
+		response.ResponseTime = time.Since(t1)
+		return response
+	}
+
+	//Handle response code
 	response.Code = resp.StatusCode
-	//TODO: check response code
 	if resp.StatusCode == 403 {
 		msg := "Not authorized"
 		response.ErrorMessage = &msg
@@ -85,16 +96,6 @@ func (hc *HttpClient) Request(url *url.URL, method string) (Response) {
 		return response
 	} else 	if resp.StatusCode == 404 {
 		msg := "Not authorized"
-		response.ErrorMessage = &msg
-		response.ResponseTime = time.Since(t1)
-		return response
-	}
-
-	// Read body
-	response.Body, err = ioutil.ReadAll(resp.Body)
-	defer resp.Body.Close()
-	if err != nil {
-		msg := fmt.Sprintf("%v", err)
 		response.ErrorMessage = &msg
 		response.ResponseTime = time.Since(t1)
 		return response

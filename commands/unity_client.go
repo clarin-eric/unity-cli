@@ -33,6 +33,8 @@ func Execute() {
 	UnityCliCmd.AddCommand(CreateVersionCommand(&globalFlags))
 	UnityCliCmd.AddCommand(CreateResolveCommand(&globalFlags))
 	UnityCliCmd.AddCommand(CreateEntityCommand(&globalFlags))
+	UnityCliCmd.AddCommand(CreateGroupCommand(&globalFlags))
+
 	//Process all arguments
 	UnityCliCmd.Execute()
 }
