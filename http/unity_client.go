@@ -148,7 +148,7 @@ func (c *UnityClient) IssueRequest() (Response) {
 	if len(response.Body) > 0 {
 		var unityError UnityError
 		err := json.Unmarshal(response.Body, &unityError)
-		if err == nil {
+		if err == nil && len(unityError.Error) > 0 {
 			msg := fmt.Sprintf("%s: %s", unityError.Error, unityError.Message)
 			response.ErrorMessage = &msg
 		}
