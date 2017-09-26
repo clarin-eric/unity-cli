@@ -12,8 +12,8 @@ func CreateEntityCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 	var identity_id int64
 
 	var ListEntityCmd = &cobra.Command{
-		Use:   "ls",
-		Short: "List an entity",
+		Use:   "list",
+		Short: "List entity details",
 		Long:  `List an entity.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			//Get unity api client
@@ -47,9 +47,9 @@ func CreateEntityCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 	ListEntityCmd.Flags().Int64VarP(&identity_id, "id", "i", 1, "Identity id")
 
 	var EntityCmd = &cobra.Command{
-		Use:   "entity",
-		Short: "Retrieve an entity",
-		Long:  `Retrieve an entity.`,
+		Use:   "entities",
+		Short: "Entity management",
+		Long:  `List, create, delete and query entities.`,
 	}
 
 	EntityCmd.AddCommand(ListEntityCmd)

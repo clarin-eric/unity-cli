@@ -15,8 +15,8 @@ func CreateGroupCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 	// List
 	//
 	var GroupListCmd = &cobra.Command{
-		Use:   "ls",
-		Short: "List group",
+		Use:   "list",
+		Short: "List group details",
 		Long:  `List subgroups and members of this group.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			//Get unity api client
@@ -105,9 +105,9 @@ func CreateGroupCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 	// Container
 	//
 	var GroupCmd = &cobra.Command{
-		Use:   "group",
-		Short: "Group ",
-		Long:  `Resolve an identity based on type and value.`,
+		Use:   "groups",
+		Short: "Group management",
+		Long:  `List, create, delete and query groups.`,
 	}
 	GroupCmd.AddCommand(GroupListCmd)
 	GroupCmd.AddCommand(GroupCreateCmd)

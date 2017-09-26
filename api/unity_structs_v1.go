@@ -82,7 +82,8 @@ type Group struct {
 
 func (g *Group) Print() {
 	fmt.Printf("Group:\n")
-	fmt.Printf("    path      : %v\n", g.Path)
-	fmt.Printf("    subGroups : %v\n", g.SubGroups)
-	fmt.Printf("    members   : %v\n", g.Members)
+	fmt.Printf("    path         : %v\n", g.Path)
+	fmt.Printf("    subGroups    : %v\n", g.SubGroups)
+	fmt.Printf("    member count : %v\n", len(g.Members))
+	fmt.Printf("    members      : %v\n", g.Members)
 }
