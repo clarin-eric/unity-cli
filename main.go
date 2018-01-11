@@ -1,7 +1,7 @@
 package main
 
 import (
-	"unity-client/commands"
+	"clarin/unity-client/commands"
 )
 
 func main() {

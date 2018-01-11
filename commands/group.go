@@ -3,7 +3,6 @@ package commands
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"unity-client/api"
 	"os"
 )
 
@@ -20,7 +19,7 @@ func CreateGroupCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 		Long:  `List subgroups and members of this group.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			//Get unity api client
-			client, err := api.GetUnityApiV1(globalFlags.Api_base, globalFlags.Verbose, globalFlags.Insecure, globalFlags.Username, globalFlags.Password)
+			client, err := createUnityClient(globalFlags)
 			if err != nil {
 				fmt.Printf("Failed to initialize unity client. Error: %v\n", err)
 				os.Exit(1)
@@ -50,7 +49,7 @@ func CreateGroupCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 		Long:  `Create a new group.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			//Get unity api client
-			client, err := api.GetUnityApiV1(globalFlags.Api_base, globalFlags.Verbose, globalFlags.Insecure, globalFlags.Username, globalFlags.Password)
+			client, err := createUnityClient(globalFlags)
 			if err != nil {
 				fmt.Printf("Failed to initialize unity client. Error: %v\n", err)
 				os.Exit(1)
@@ -79,7 +78,7 @@ func CreateGroupCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 		Long:  `Delete a group.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			//Get unity api client
-			client, err := api.GetUnityApiV1(globalFlags.Api_base, globalFlags.Verbose, globalFlags.Insecure, globalFlags.Username, globalFlags.Password)
+			client, err := createUnityClient(globalFlags)
 			if err != nil {
 				fmt.Printf("Failed to initialize unity client. Error: %v\n", err)
 				os.Exit(1)

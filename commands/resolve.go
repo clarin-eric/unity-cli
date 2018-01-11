@@ -3,8 +3,9 @@ package commands
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"unity-client/api"
+	"clarin/unity-client/api"
 	"os"
+	"encoding/csv"
 )
 
 func CreateResolveCommand(globalFlags *GlobalFlags) (*cobra.Command) {
@@ -18,7 +19,7 @@ func CreateResolveCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 		Long:  `Resolve an identity based on type and value. This yields the same output as "entities ls".`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			//Get unity api client
-			client, err := api.GetUnityApiV1(globalFlags.Api_base, globalFlags.Verbose, globalFlags.Insecure, globalFlags.Username, globalFlags.Password)
+			client, err := createUnityClient(globalFlags)
 			if err != nil {
 				fmt.Printf("Failed to initialize unity client. Error: %v\n", err)
 				os.Exit(1)
@@ -46,7 +47,7 @@ func CreateResolveCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 		Long:  `Resolve all entities in a group.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			//Get unity api client
-			client, err := api.GetUnityApiV1(globalFlags.Api_base, globalFlags.Verbose, globalFlags.Insecure, globalFlags.Username, globalFlags.Password)
+			client, err := createUnityClient(globalFlags)
 			if err != nil {
 				fmt.Printf("Failed to initialize unity client. Error: %v\n", err)
 				os.Exit(1)
@@ -59,14 +60,39 @@ func CreateResolveCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 				os.Exit(1)
 			}
 
+			var entities []api.Entity
 			for _, id := range group.Members {
 				//Process response
 				entity, err := client.Entity(id, nil)
 				if err != nil {
 					fmt.Printf("Failed to resolve entity with id=\"%v\". Error: %v\n", id, err)
 				} else {
-					entity.Print()
+					entities = append(entities, *entity)
 				}
+			}
+
+			var data [][]string
+			data = append(data, []string{"Id", "State", "Email"})
+			for _, e := range entities {
+				id := fmt.Sprintf("%d", e.Id)
+				state := e.State
+				email_identity := "Unkown"
+				for _, id := range e.Identities {
+					if id.TypeId == "email" {
+						email_identity = id.Value
+					}
+				}
+				data = append(data, []string{id, state, email_identity})
+			}
+
+			//Write csv to stdout
+			writer := csv.NewWriter(os.Stdout)
+			//writer.Comma = separator
+			defer writer.Flush()
+
+			for _, value := range data {
+				err := writer.Write(value)
+				checkError("Cannot write to file", err)
 			}
 
 			return nil

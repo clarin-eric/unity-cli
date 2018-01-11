@@ -3,7 +3,6 @@ package commands
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"unity-client/api"
 	"os"
 )
 
@@ -17,7 +16,7 @@ func CreateEntityCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 		Long:  `List an entity.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			//Get unity api client
-			client, err := api.GetUnityApiV1(globalFlags.Api_base, globalFlags.Verbose, globalFlags.Insecure, globalFlags.Username, globalFlags.Password)
+			client, err := createUnityClient(globalFlags)
 			if err != nil {
 				fmt.Printf("Failed to initialize unity client. Error: %v\n", err)
 				os.Exit(1)

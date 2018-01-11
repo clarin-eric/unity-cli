@@ -3,6 +3,7 @@ package commands
 import (
 	"github.com/spf13/cobra"
 	"fmt"
+	"clarin/unity-client/api"
 )
 
 type GlobalFlags struct {
@@ -11,6 +12,8 @@ type GlobalFlags struct {
 	Insecure bool
 	Username string
 	Password string
+	File string
+	UseFile bool
 }
 
 var UnityCliCmd = &cobra.Command{
@@ -28,12 +31,15 @@ func Execute() {
 	UnityCliCmd.PersistentFlags().StringVarP(&globalFlags.Api_base, "base", "b", "https://localhost:2443", "Base url for the unity-idm rest endpoint")
 	UnityCliCmd.PersistentFlags().StringVarP(&globalFlags.Username, "user", "u", "admin", "Specify username")
 	UnityCliCmd.PersistentFlags().StringVarP(&globalFlags.Password, "pass", "p", "Admin12345", "Specify password")
+	UnityCliCmd.PersistentFlags().BoolVarP(&globalFlags.UseFile, "pass-from-file", "P", false, "Load values from file")
+	UnityCliCmd.PersistentFlags().StringVarP(&globalFlags.File, "file", "f", "/root/params.sh", "File with configuration properties")
 
 	//Add subcommands
 	UnityCliCmd.AddCommand(CreateVersionCommand(&globalFlags))
 	UnityCliCmd.AddCommand(CreateResolveCommand(&globalFlags))
 	UnityCliCmd.AddCommand(CreateEntityCommand(&globalFlags))
 	UnityCliCmd.AddCommand(CreateGroupCommand(&globalFlags))
+	UnityCliCmd.AddCommand(CreateRequestsCommand(&globalFlags))
 
 	//Process all arguments
 	UnityCliCmd.Execute()
@@ -41,4 +47,8 @@ func Execute() {
 
 func init() {
 	fmt.Sprintf("Init")
+}
+
+func createUnityClient(globalFlags *GlobalFlags) (*api.UnityApiV1, error) {
+	return api.GetUnityApiV1(globalFlags.Api_base, globalFlags.Verbose, globalFlags.Insecure, globalFlags.Username, globalFlags.Password, globalFlags.UseFile, globalFlags.File)
 }
