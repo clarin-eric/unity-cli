@@ -3,7 +3,7 @@ package api
 import (
 	"fmt"
 	"errors"
-	"clarin/unity-client/http"
+	"clarin/unity-cli/http"
 	"encoding/json"
 	"net/url"
 	"github.com/magiconair/properties"

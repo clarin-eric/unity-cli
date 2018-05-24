@@ -3,11 +3,10 @@ package commands
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"clarin/unity-client/api"
+	"clarin/unity-cli/api"
 	"os"
 	"time"
-	//"clarin/unity-client/google"
-	"clarin/unity-client/report"
+	"clarin/unity-cli/report"
 
 )
 

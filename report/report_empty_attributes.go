@@ -1,7 +1,7 @@
 package report
 
 import (
-	"clarin/unity-client/api"
+	"clarin/unity-cli/api"
 	"encoding/json"
 	"fmt"
 )

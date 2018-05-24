@@ -1,4 +1,4 @@
-_BINARY="clarin-unity-client"
+_BINARY="unity-cli"
 _VERSION="v0.0.2"
 _GOPATH="/Users/wilelb/Code/work/clarin/git/infrastructure2/golang"
 
