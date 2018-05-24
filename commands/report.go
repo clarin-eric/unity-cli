@@ -19,65 +19,7 @@ func CreateReportCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 	var (
 		output string
 		kind string
-		fix_attributes bool
 	)
-
-	var TestReport = &cobra.Command{
-		Use:   "test",
-		Short: "Resolve an identity",
-		Long:  `Resolve an identity based on type and value. This yields the same output as "entities ls".`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			client, err := createUnityClient(globalFlags)
-			if err != nil {
-				fmt.Printf("Failed to initialize unity client. Error: %v\n", err)
-				return nil
-			}
-
-			attributes, err := client.GetAttributes(261, "/")
-			if err != nil {
-				fmt.Printf("%s\n", err)
-				return nil
-			}
-
-			for _, a := range attributes {
-				fmt.Printf("%50s %20s %20s\n", a.Name, a.GroupPath,  a.Visibility)
-				for _, v := range a.Values {
-					fmt.Printf("  %s\n", v)
-				}
-			}
-
-			return nil
-		},
-	}
-
-	var TestUpdateReport = &cobra.Command{
-		Use:   "test-update",
-		Short: "Resolve an identity",
-		Long:  `Resolve an identity based on type and value. This yields the same output as "entities ls".`,
-		Run: func(cmd *cobra.Command, args []string) {
-			client, err := createUnityClient(globalFlags)
-			if err != nil {
-				fmt.Printf("Failed to initialize unity client. Error: %v\n", err)
-			}
-
-			fmt.Printf("Fetching list of entities\n")
-			t1 := time.Now()
-			entities, err := GetAllEntitiesForGroupWithClient(globalFlags, "/clarin", client)
-			if err != nil {
-				fmt.Printf("Failed to fecth entities. Error: %v\n", err)
-				os.Exit(1)
-			}
-			d := time.Since(t1)
-
-			fmt.Printf("Fetched list of %d entitites in %.3fms\n", len(entities), float64(d.Nanoseconds())/1000000.0)
-
-
-
-			for _, entity := range entities {
-				entity.RepairAttributeSet(client)
-			}
-		},
-	}
 
 	var ReportMissingAttributesCmd = &cobra.Command{
 		Use:   "missing_attributes",
@@ -104,7 +46,6 @@ func CreateReportCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 			return nil
 		},
 	}
-	ReportMissingAttributesCmd.Flags().BoolVar(&fix_attributes, "fix",  false,"Fix missing attribute values by setting default values")
 
 	//
 	// Root command
@@ -151,7 +92,7 @@ func CreateReportCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 		Long:  `Report informaton.`,
 	}
 
-	ReportCmd.AddCommand(ReportMissingAttributesCmd, ReportStatsCmd, TestReport, TestUpdateReport)
+	ReportCmd.AddCommand(ReportMissingAttributesCmd, ReportStatsCmd)
 	ReportCmd.PersistentFlags().StringVarP(&output, "output", "o", "pretty", "Output format. Supported values: pretty,json,csv,tsv,google")
 	ReportCmd.PersistentFlags().StringVarP(&kind, "type", "t", "both", "Type of output. Supported values: anonymous,personal,both")
 
