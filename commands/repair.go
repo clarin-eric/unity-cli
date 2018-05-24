@@ -5,10 +5,10 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 	"time"
-	"clarin/unity-client/api"
+	"clarin/unity-cli/api"
 	"encoding/json"
 	"io/ioutil"
-	"clarin/unity-client/report"
+	"clarin/unity-cli/report"
 )
 
 func CreateRepairCommand(globalFlags *GlobalFlags) (*cobra.Command) {

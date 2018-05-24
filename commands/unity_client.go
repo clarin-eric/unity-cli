@@ -3,7 +3,7 @@ package commands
 import (
 	"github.com/spf13/cobra"
 	"fmt"
-	"clarin/unity-client/api"
+	"clarin/unity-cli/api"
 )
 
 type GlobalFlags struct {
@@ -17,7 +17,7 @@ type GlobalFlags struct {
 }
 
 var UnityCliCmd = &cobra.Command{
-	Use:   "unity-client",
+	Use:   "unity-cli",
 	Short: "CLI client for the unity idm REST interface",
 	Long: `Command line interface (CLI) client for the unity idm REST interface.`,
 }

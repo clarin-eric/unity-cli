@@ -3,7 +3,7 @@ package commands
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"clarin/unity-client/api"
+	"clarin/unity-cli/api"
 	"os"
 	"encoding/csv"
 	"log"
