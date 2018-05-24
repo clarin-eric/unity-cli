@@ -4,3 +4,4 @@ clarin-unity-client_osx*
 .tsv
 client_secret.json
 token.json
+.idea
