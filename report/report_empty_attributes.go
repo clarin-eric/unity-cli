@@ -57,11 +57,10 @@ func (r *ReportEmptyAttributes) ToJson() ([]byte) {
 	return json_bytes
 }
 
-func (r *ReportEmptyAttributes) ToTabular() ([][]string) {
+func (r *ReportEmptyAttributes) GetReportAsArray() ([][]string) {
 	data := [][]string{}
 	return data
 }
-
 
 
 

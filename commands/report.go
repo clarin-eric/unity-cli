@@ -8,6 +8,7 @@ import (
 	"time"
 	"clarin/unity-cli/report"
 
+	"strings"
 )
 
 type int64arr []int64
@@ -17,7 +18,7 @@ func (a int64arr) Less(i, j int) bool { return a[i] < a[j] }
 
 func CreateReportCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 	var (
-		output string
+		outputs string
 		kind string
 	)
 
@@ -36,24 +37,27 @@ func CreateReportCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 			}
 			d := time.Since(t1)
 
-			fmt.Printf("Generated in %dns\n", d.Nanoseconds())
+			fmt.Printf("Generated missing attributes in %dns\n", d.Nanoseconds())
 
 			attribute_set := []string{"clarin-full-name", "member", "clarin-motivation"}
 			report.Compute(entities, attribute_set)
 
-			fmt.Printf("Json:\n%s\n", string(report.ToJson()))
+			//for _, o := range SplitOutputs(outputs) {
+			ExportJson("report_missing_attributes.json", report)
+			//}
 
 			return nil
 		},
 	}
+	ReportMissingAttributesCmd.Flags().StringVarP(&outputs, "outputs", "o", "json", "List of output formats (comma separated). Supported values: json")
 
 	//
 	// Root command
 	//
 	var ReportStatsCmd = &cobra.Command{
-		Use:   "report",
-		Short: "Report commands",
-		Long:  `Report informaton.`,
+		Use:   "entities",
+		Short: "Report entities",
+		Long:  `Report entity informaton.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			report := report.Report{}
 
@@ -74,14 +78,35 @@ func CreateReportCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 			}
 			d := time.Since(t1)
 
-			fmt.Printf("Generated in %dns\n", d.Nanoseconds())
+			fmt.Printf("Generated entity report in %dns\n", d.Nanoseconds())
 
 			report.Compute(entities)
-			report.Write(kind, output)
 
+			for _, o := range SplitOutputs(outputs) {
+				if o == "tsv" || o == "csv" {
+					separator := GetSeparator(o)
+					if kind == "both" {
+						ExportSeparated(fmt.Sprintf("%s_report.%s", "anonymous", o), report.GetReportAsArray("anonymous"), separator)
+						ExportSeparated(fmt.Sprintf("%s_report.%s", "personal", o), report.GetReportAsArray("personal"), separator)
+					} else {
+						ExportSeparated(fmt.Sprintf("%s_report.%s", kind, o), report.GetReportAsArray(kind), separator)
+					}
+				} else if o == "json" {
+					if kind == "both" {
+						ExportJson(fmt.Sprintf("%s_report.json", "anonymous"), report.GetReport("anonymous"))
+						ExportJson(fmt.Sprintf("%s_report.json", "personal"), report.GetReport("personal"))
+					} else {
+						ExportJson(fmt.Sprintf("%s_report.json", kind), report.GetReport(kind))
+					}
+				} else {
+					fmt.Printf("Unsupported output format: %s\n", o)
+				}
+			}
 			return nil
 		},
 	}
+	ReportStatsCmd.Flags().StringVarP(&outputs, "outputs", "o", "json", "List of output formats (comma separated). Supported values: json,csv,tsv")
+	ReportStatsCmd.Flags().StringVarP(&kind, "type", "t", "both", "Type of output. Supported values: anonymous,personal,both")
 
 	//
 	// Root command
@@ -91,10 +116,7 @@ func CreateReportCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 		Short: "Report commands",
 		Long:  `Report informaton.`,
 	}
-
 	ReportCmd.AddCommand(ReportMissingAttributesCmd, ReportStatsCmd)
-	ReportCmd.PersistentFlags().StringVarP(&output, "output", "o", "pretty", "Output format. Supported values: pretty,json,csv,tsv,google")
-	ReportCmd.PersistentFlags().StringVarP(&kind, "type", "t", "both", "Type of output. Supported values: anonymous,personal,both")
 
 	return ReportCmd
 }
@@ -132,4 +154,16 @@ func GetAllEntitiesForGroupWithClient(globalFlags *GlobalFlags, group_path strin
 	}
 
 	return entities, nil
+}
+
+func GetSeparator(output string) (rune) {
+	separator := ','
+	if output == "tsv" {
+		separator = '\t'
+	}
+	return separator
+}
+
+func SplitOutputs(outputs string) ([]string) {
+	return strings.Split(outputs, ",")
 }

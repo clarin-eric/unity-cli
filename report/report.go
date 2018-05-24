@@ -3,11 +3,9 @@ package report
 import (
 	"fmt"
 	"os"
-	"encoding/csv"
 	"time"
 	"clarin/unity-cli/api"
 	"strings"
-	"encoding/json"
 	"runtime"
 )
 
@@ -113,6 +111,7 @@ func (r *Report) Compute(entities []api.Entity) {
 		}
  	}
 
+ 	/*
 	fmt.Printf("No full name value:\n")
  	for _, v := range no_full_name {
  		fmt.Printf("%s\n", v)
@@ -127,6 +126,7 @@ func (r *Report) Compute(entities []api.Entity) {
 	for _, v := range no_motivation {
 		fmt.Printf("%s\n", v)
 	}
+ 	*/
 }
 
 func (r *Report) getDaysSinceLastAuth(last_auth string) (int) {
@@ -162,6 +162,37 @@ func (r *Report) getEmailDomain(email string) (string) {
 	return domain
 }
 
+func (r *Report) GetReport(kind string) (interface{}) {
+	switch kind {
+	case "anonymous": return r.anonymous_report_entities
+	case "personal": return r.personal_report_entities
+	}
+	return nil
+}
+
+func (r *Report) GetReportAsArray(kind string) ([][]string) {
+	if kind == "personal" {
+		header := PersonalReportEntity{}
+		data := [][]string{header.StringArrayHeader()}
+		for _, e := range r.personal_report_entities {
+			data = append(data, e.AsStringArray())
+		}
+		return data
+	}
+
+	if kind == "anonymous" {
+		header := AnonymousReportEntity{}
+		data := [][]string{header.StringArrayHeader()}
+		for _, e := range r.anonymous_report_entities {
+			data = append(data, e.AsStringArray())
+		}
+		return data
+	}
+
+	return nil
+}
+
+/*
 func (r *Report) Write(kind, output_format string) {
 
 	if kind == "anonymous" || kind == "both" {
@@ -196,13 +227,11 @@ func (r *Report) writeSeparatedValues(kind, ext, sep string) {
 }
 
 func (r *Report) PrettyPrint() {
-	/*
-	fmt.Printf("#accounts : %d\n", r.General.Num_accounts)
-	fmt.Printf("   #active: %d\n", r.General.Num_authenticated_accounts)
-	r.printMap(r.Domains, "Domains")
-	r.printMap(r.Countries, "Country")
-	r.printMapInt64(r.Last_auths, "Last authenticated")
-	*/
+//	fmt.Printf("#accounts : %d\n", r.General.Num_accounts)
+//	fmt.Printf("   #active: %d\n", r.General.Num_authenticated_accounts)
+//	r.printMap(r.Domains, "Domains")
+//	r.printMap(r.Countries, "Country")
+//	r.printMapInt64(r.Last_auths, "Last authenticated")
 }
 
 func (r *Report) addToMap(m map[string]int64, key string) (map[string]int64) {
@@ -274,7 +303,7 @@ func (r *Report) writeCsv(filename string, data [][]string, tsv bool) {
 		}
 	}
 }
-
+*/
 func (r *Report) UserHomeDir() string {
 	env := "HOME"
 	if runtime.GOOS == "windows" {
@@ -286,9 +315,11 @@ func (r *Report) UserHomeDir() string {
 }
 
 func (r *Report) GetFile(filename string) (*os.File, error) {
-	basename := "unity_reporting"
+
 	dir := r.UserHomeDir()
-	base := fmt.Sprintf("%s/%s", dir, basename)
+	basename := "unity_reporting"
+	subdir := time.Now().Format("2006-01-02")
+	base := fmt.Sprintf("%s/%s/%s", dir, basename, subdir)
 
 	if _, err := os.Stat(base); os.IsNotExist(err) {
 		fmt.Printf("Creating %s\n", base)
