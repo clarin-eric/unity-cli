@@ -1,5 +1,5 @@
 _BINARY="clarin-unity-client"
-_VERSION="v0.0.2"
+_VERSION="v0.0.3"
 _GOPATH="/Users/wilelb/Code/work/clarin/git/infrastructure2/golang"
 
 _NAME_LINUX="${_BINARY}_linux_${_VERSION}"
