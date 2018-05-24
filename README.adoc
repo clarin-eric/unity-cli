@@ -1,0 +1,58 @@
+= Unity API client
+:caution-caption: ☡ CAUTION
+:important-caption: ❗ IMPORTANT
+:note-caption: 🛈 NOTE
+:sectanchors:
+:sectlinks:
+:sectnumlevels: 6
+:sectnums:
+:source-highlighter: pygments
+:tip-caption: 💡 TIP
+:toc-placement: preamble
+:toc:
+:warning-caption: ⚠ WARNING
+
+This project provides a client to interact with the unity-idm API.
+
+== Introduction
+
+== Installation
+
+== Usage
+
+[source,sh]
+----
+Command line interface (CLI) client for the unity idm REST interface.
+
+Usage:
+  unity-client [command]
+
+Available Commands:
+  entities    Entity management
+  groups      Group management
+  help        Help about any command
+  repair      Repair commands
+  report      Report commands
+  requests    Request management
+  resolve     Resolution commands
+  version     Print the version number of unity-cli
+
+Flags:
+  -b, --base string      Base url for the unity-idm rest endpoint (default "https://localhost:2443")
+  -f, --file string      File with configuration properties (default "/root/params.sh")
+  -h, --help             help for unity-client
+  -k, --insecure         Don't verify certificates
+  -p, --pass string      Specify password (default "Admin12345")
+      --pass-from-file   Load values from file
+  -u, --user string      Specify username (default "admin")
+  -v, --verbose          Run in verbose mode
+
+Use "unity-client [command] --help" for more information about a command.
+----
+
+=== Reporting
+
+=== Repairing
+
+The tool can be used to repair attribute sets for entities. This will ensure that any missing values are filled with the
+`Unspecified` value.
