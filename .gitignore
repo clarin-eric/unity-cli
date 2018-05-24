@@ -1,3 +1,6 @@
 clarin-unity-client_linux*
 clarin-unity-client_osx*
 .csv
+.tsv
+client_secret.json
+token.json
