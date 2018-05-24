@@ -1,5 +1,5 @@
-clarin-unity-client_linux*
-clarin-unity-client_osx*
+clarin-unity-cli_linux*
+clarin-unity-cli_osx*
 .csv
 .tsv
 client_secret.json
