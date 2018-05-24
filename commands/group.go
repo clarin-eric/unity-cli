@@ -26,19 +26,30 @@ func CreateGroupCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 			}
 
 			//Resolve
-			group, err := client.GetGroup(&group_path)
-			if err != nil {
-				fmt.Printf("Failed to get group with path=\"%v\". Error: %v\n", group_path, err)
-				os.Exit(1)
+			if recursive {
+				group, err := client.GetGroupRecusive(&group_path)
+				if err != nil {
+					fmt.Printf("Failed to get group with path=\"%v\". Error: %v\n", group_path, err)
+					os.Exit(1)
+				}
+
+				//Process response
+				fmt.Printf("%s\n", group.ToJson())
+			} else {
+				group, err := client.GetGroup(&group_path)
+				if err != nil {
+					fmt.Printf("Failed to get group with path=\"%v\". Error: %v\n", group_path, err)
+					os.Exit(1)
+				}
+
+				//Process response
+				group.Print()
 			}
-
-			//Process response
-			group.Print()
-
 			return nil
 		},
 	}
 	GroupListCmd.Flags().StringVarP(&group_path, "path", "P", "/", "Group path")
+	GroupListCmd.Flags().BoolVarP(&recursive, "recursive", "r", false, "List groups recursivly")
 
 	//
 	// Create

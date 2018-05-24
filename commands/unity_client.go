@@ -31,7 +31,7 @@ func Execute() {
 	UnityCliCmd.PersistentFlags().StringVarP(&globalFlags.Api_base, "base", "b", "https://localhost:2443", "Base url for the unity-idm rest endpoint")
 	UnityCliCmd.PersistentFlags().StringVarP(&globalFlags.Username, "user", "u", "admin", "Specify username")
 	UnityCliCmd.PersistentFlags().StringVarP(&globalFlags.Password, "pass", "p", "Admin12345", "Specify password")
-	UnityCliCmd.PersistentFlags().BoolVarP(&globalFlags.UseFile, "pass-from-file", "P", false, "Load values from file")
+	UnityCliCmd.PersistentFlags().BoolVarP(&globalFlags.UseFile, "pass-from-file", "", false, "Load values from file")
 	UnityCliCmd.PersistentFlags().StringVarP(&globalFlags.File, "file", "f", "/root/params.sh", "File with configuration properties")
 
 	//Add subcommands
@@ -40,6 +40,8 @@ func Execute() {
 	UnityCliCmd.AddCommand(CreateEntityCommand(&globalFlags))
 	UnityCliCmd.AddCommand(CreateGroupCommand(&globalFlags))
 	UnityCliCmd.AddCommand(CreateRequestsCommand(&globalFlags))
+	UnityCliCmd.AddCommand(CreateReportCommand(&globalFlags))
+	UnityCliCmd.AddCommand(CreateRepairCommand(&globalFlags))
 
 	//Process all arguments
 	UnityCliCmd.Execute()

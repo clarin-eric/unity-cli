@@ -82,6 +82,8 @@ func (api *UnityApiV1) Resolve(identity_type, identity_value string) (*Entity, e
 @GET
  */
 func (api *UnityApiV1) Entity(entity_id int64, identity_type *string) (*Entity, error) {
+	extended := true
+
 	api.client.SetPathByString("./entity/%d", entity_id)
 	if identity_type != nil {
 		api.client.AddQueryParam("identityType", *identity_type)
@@ -99,9 +101,66 @@ func (api *UnityApiV1) Entity(entity_id int64, identity_type *string) (*Entity, 
 		return nil, errors.New(fmt.Sprint("Failed to unmarshall response. Error: %v\nBody:\n%v\n", err, string(response.Body)))
 	}
 
+	if extended {
+		//Process entity groups
+		groups, err := api.GetEntityGroups(entity.Id)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to fetch groups for entity with id: %d. Error: %v\n", entity.Id, err)
+		}
+		entity.Groups = groups
+
+		//fmt.Printf("Groups: %s\n", groups)
+		//Process entities attribues
+		var attributes []Attribute
+		//group_path := "/"
+		for _, group_path := range entity.Groups {
+			attrs, err := api.GetAttributes(entity_id, group_path)
+			if err != nil{
+				fmt.Printf("Failed to fetch attributes. Grouppath: %s, entity id: %d. Error: %v\n", group_path, entity_id, err)
+			} else{
+				for _, attr := range attrs{
+					if attr.Name != "sys:Credential:Password credential"{
+						attributes = append(attributes, attr)
+					}
+				}
+			}
+			/*
+			attrs, err = api.GetAttributes(entity_id, group_path)
+			if err != nil{
+				fmt.Printf("Failed to fetch attributes. Grouppath: %s, entity id: %d. Error: %v\n", group_path, entity_id, err)
+			} else {
+				for _, attr := range attrs {
+					if attr.Name != "sys:Credential:Password credential" {
+						attributes = append(attributes, attr)
+					}
+				}
+			}
+			*/
+		}
+		entity.Attributes = attributes
+	}
+
+
 	return &entity, nil
 }
 
+func (api *UnityApiV1) GetEntityGroups(entity_id int64) ([]string, error) {
+	api.client.SetPathByString("./entity/%d/groups", entity_id)
+
+	response := api.client.IssueRequest()
+	if response.ErrorMessage != nil {
+		return nil, errors.New(*response.ErrorMessage)
+	}
+
+	// Unmarshal response
+	var groups []string
+	err := json.Unmarshal(response.Body, &groups)
+	if err != nil {
+		return nil, errors.New(fmt.Sprint("Failed to unmarshall response. Error: %v\nBody:\n%v\n", err, string(response.Body)))
+	}
+
+	return groups, nil
+}
 
 /*
 Return all members and subgroups of a given group.
@@ -135,6 +194,24 @@ func (api *UnityApiV1) GetGroup(group_path *string) (*Group, error) {
 	group.Path = *group_path
 
 	return &group, nil
+}
+
+func (api *UnityApiV1) GetGroupRecusive(group_path *string) (*Group, error) {
+	group, err := api.GetGroup(group_path)
+	if err != nil {
+		return group, err
+	}
+
+	for _, sub_group_path := range group.SubGroupPaths {
+		sub_group, err := api.GetGroupRecusive(&sub_group_path)
+		if err != nil {
+			fmt.Printf("Error: %v\n", err)
+		} else {
+			group.SubGroups = append(group.SubGroups, *sub_group)
+		}
+	}
+
+	return group, nil
 }
 
 /**
@@ -205,6 +282,85 @@ func (api *UnityApiV1) GetRegistrationRequests() ([]RegistrationRequest, error) 
 	}
 
 	return requests, nil
+}
+
+/**
+@Path("/entity/{entityId}/attributes")
+@QueryParam("group")
+@QueryParam("effective")
+@QueryParam("identityType")
+@GET
+ */
+func (api *UnityApiV1) GetAttributes(entity_id int64, group string) ([]Attribute, error) {
+	var attributes []Attribute
+
+	api.client.SetPathByString("./entity/%d/attributes", entity_id)
+	api.client.SetMethod("GET")
+	api.client.AddQueryParam("group", group)
+
+	//Issue request
+	response := api.client.IssueRequest()
+	if response.ErrorMessage != nil {
+		return attributes, errors.New(*response.ErrorMessage)
+	}
+
+	// Unmarshal response
+	err := json.Unmarshal(response.Body, &attributes)
+	if err != nil {
+		return attributes, errors.New(fmt.Sprint("Failed to unmarshall response. Error: %v\nBody:\n%v\n", err, string(response.Body)))
+	}
+
+	return attributes, nil
+}
+
+func (api *UnityApiV1) UpdateAttribute(entity_id int64, attribute interface{}) (error) {
+	//Build request
+	api.client.SetPathByString("./entity/%d/attribute", entity_id)
+	api.client.SetMethod("PUT")
+	if err := api.client.SetMarshallBody(attribute); err != nil {
+		return fmt.Errorf("Failed to marshall request body. Error: %s", err)
+	}
+
+	//Issue request
+	response := api.client.IssueRequest()
+	if response.ErrorMessage != nil {
+		return errors.New(*response.ErrorMessage)
+	}
+
+	return nil
+}
+
+func (api *UnityApiV1) UpdateAttributes(entity_id int64, attributes []AttributeWithConfirmationData) (error) {
+	//Build request
+	api.client.SetPathByString("./entity/%d/attributes", entity_id)
+	api.client.SetMethod("PUT")
+	if err := api.client.SetMarshallBody(attributes); err != nil {
+		return fmt.Errorf("Failed to marshall request body. Error: %s", err)
+	}
+
+	//Issue request
+	response := api.client.IssueRequest()
+	if response.ErrorMessage != nil {
+		return errors.New(*response.ErrorMessage)
+	}
+
+	// Unmarshal response
+	fmt.Printf("Response:\n%v\n", response.Body)
+	return nil
+}
+
+func (api *UnityApiV1) RemoveAttribute(entity_id int64, name, identity_type, group string) (error) {
+	api.client.SetPathByString("./entity/%d/attribute/%s", entity_id, url.QueryEscape(name))
+	api.client.SetMethod("DELETE")
+	//api.client.AddQueryParam("identityType",url.QueryEscape(identity_type))
+	api.client.AddQueryParam("group", group) //Seems not to work url escaped
+
+	//Issue request
+	response := api.client.IssueRequest()
+	if response.ErrorMessage != nil {
+		return errors.New(*response.ErrorMessage)
+	}
+	return nil
 }
 
 /**

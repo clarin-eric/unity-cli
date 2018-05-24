@@ -3,7 +3,6 @@ package commands
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"clarin/unity-client/api"
 	"os"
 	"encoding/csv"
 )
@@ -46,6 +45,13 @@ func CreateResolveCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 		Short: "Resolve entities in a group",
 		Long:  `Resolve all entities in a group.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			entities, err := GetAllEntitiesForGroup(globalFlags, group_path)
+			if err != nil {
+				fmt.Printf("Failed to fecth entities. Error: %v\n", err)
+				os.Exit(1)
+			}
+
+			/*
 			//Get unity api client
 			client, err := createUnityClient(globalFlags)
 			if err != nil {
@@ -70,9 +76,10 @@ func CreateResolveCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 					entities = append(entities, *entity)
 				}
 			}
-
+			*/
 			var data [][]string
-			data = append(data, []string{"Id", "State", "Email"})
+			data = append(data, []string{
+				"Id", "State", "Email", "lr-list", "full-name", "affiliation", "purpose", "motivation", "country","cn", "last-authn"})
 			for _, e := range entities {
 				id := fmt.Sprintf("%d", e.Id)
 				state := e.State
@@ -82,7 +89,19 @@ func CreateResolveCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 						email_identity = id.Value
 					}
 				}
-				data = append(data, []string{id, state, email_identity})
+				data = append(data, []string{
+					id, state, email_identity,
+					e.GetAttributeValuesAsString("clarin-lr-list"),
+					e.GetAttributeValuesAsString("clarin-full-name"),
+					e.GetAttributeValuesAsString("member"),
+					e.GetAttributeValuesAsString("clarin-purpose"),
+					e.GetAttributeValuesAsString("clarin-motivation"),
+					e.GetAttributeValuesAsString("clarin-country"),
+					e.GetAttributeValuesAsString("cn"),
+					e.GetAttributeValuesAsString("sys:LastAuthentication"),
+				})
+
+
 			}
 
 			//Write csv to stdout

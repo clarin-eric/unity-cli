@@ -8,6 +8,8 @@ import (
 	"io/ioutil"
 	//"errors"
 	"fmt"
+	"bytes"
+	"io"
 )
 
 type HttpClient struct {
@@ -38,25 +40,36 @@ func InitHttpClient(verbose, insecure bool, username, password *string) (*HttpCl
 	}
 }
 
-func (hc *HttpClient) Get(url *url.URL) (Response) {
-	return hc.Request(url, "GET")
+func (hc *HttpClient) Get(url *url.URL, body []byte) (Response) {
+	return hc.Request(url, "GET", body)
 }
 
-func (hc *HttpClient) Post(url *url.URL) (Response) {
-	return hc.Request(url, "POST")
+func (hc *HttpClient) Put(url *url.URL, body []byte) (Response) {
+	return hc.Request(url, "PUT", body)
 }
 
-func (hc *HttpClient) Delete(url *url.URL) (Response) {
-	return hc.Request(url, "DELETE")
+func (hc *HttpClient) Post(url *url.URL, body []byte) (Response) {
+	return hc.Request(url, "POST", body)
 }
 
-func (hc *HttpClient) Request(url *url.URL, method string) (Response) {
+func (hc *HttpClient) Delete(url *url.URL, body []byte) (Response) {
+	return hc.Request(url, "DELETE", body)
+}
+
+func (hc *HttpClient) Request(url *url.URL, method string, body []byte) (Response) {
 	var response Response
 
 	t1 := time.Now()
+	var rdr io.Reader
+	if body != nil && len(body) > 0 {
+		rdr = bytes.NewReader(body)
+	}
 
 	//Build request
-	req, err := net_http.NewRequest(method, url.String(), nil)
+	req, err := net_http.NewRequest(method, url.String(), rdr)
+	if body != nil && len(body) > 0 {
+		req.Header.Add("Content-Type", "application/json")
+	}
 	if err != nil {
 		msg := fmt.Sprintf("%v", err)
 		response.ErrorMessage = &msg

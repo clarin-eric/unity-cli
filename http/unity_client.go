@@ -49,6 +49,7 @@ type UnityClient struct {
 	path *url.URL
 	values *url.Values
 	method string
+	body []byte
 }
 
 func GetNewUnityClient(base_url string, verbose bool, insecure bool, username, password string) (*UnityClient, error) {
@@ -103,6 +104,19 @@ func (c *UnityClient) SetMethod(method string) {
 	c.method = method
 }
 
+func (c *UnityClient) SetMarshallBody(data interface{}) (error) {
+	body, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	c.body = body
+	return nil
+}
+
+func (c *UnityClient) SetBody(body []byte) {
+	c.body = body
+}
+
 func (c *UnityClient) Reset() {
 	c.path = nil
 	c.values = nil
@@ -134,13 +148,15 @@ func (c *UnityClient) IssueRequest() (Response) {
 	//Issue request
 	switch c.method {
 	case "GET":
-		response = c.client.Get(request.Url)
+		response = c.client.Get(request.Url, c.body)
 		break
+	case "PUT":
+		response = c.client.Put(request.Url, c.body)
 	case "POST":
-		response = c.client.Post(request.Url)
+		response = c.client.Post(request.Url, c.body)
 		break
 	case "DELETE":
-		response = c.client.Delete(request.Url)
+		response = c.client.Delete(request.Url, c.body)
 		break
 	}
 
