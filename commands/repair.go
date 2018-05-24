@@ -65,7 +65,8 @@ func CreateRepairCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 				return
 			}
 
-			file, err := report.Report{}.GetFile(filename)
+			r := report.Report{}
+			file, err := r.GetFile(filename)
 			if err != nil {
 				fmt.Printf("Failed to create file. Error: %s\n", err)
 				return
