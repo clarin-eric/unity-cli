@@ -41,7 +41,7 @@ func (r *ReportEmptyAttributes) Compute(entities []api.Entity, attribute_set []s
 }
 
 func (r *ReportEmptyAttributes) checkAttribute(e api.Entity, attribute_name string, m map[int64]string) (map[int64]string) {
-	email := getEmail(e)
+	email, _, _ := getEmail(e)
 	value := e.GetAttributeValuesAsString(attribute_name)
 	if value == "" {
 		m[e.Id] = email

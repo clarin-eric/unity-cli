@@ -260,20 +260,20 @@ func isEmpty(values []string) (bool) {
 }
 
 /**
- * {
- *   "typeId": "email",
- *   "value": "willem@clarin.eu",
- *   "target": null,
- *   "realm": null,
- *   "translationProfile": null,
- *   "remoteIdp": null,
- *   "confirmationInfo": {
- *     "confirmed": false,
- *     "confirmationDate": 0,
- *     "sentRequestAmount": 1,
- *     "serializedConfiguration": "{\"confirmed\":false,\"confirmationDate\":0,\"sentRequestAmount\":1}"
- *   },
- *   "metadata": null
+ {
+		"typeId": "persistent",
+		"value": "0fa01481-1da7-45d9-b365-d5e5c3c39221",
+		"target": null,
+		"realm": null,
+		"translationProfile": null,
+		"remoteIdp": null,
+		"confirmationInfo": null,
+		"metadata": null,
+		"entityId": 1,
+		"creationTs": 1470824153232,
+		"updateTs": 1470824153232,
+		"comparableValue": "0fa01481-1da7-45d9-b365-d5e5c3c39221"
+	}
  * }
  */
 type Identity struct {
@@ -284,6 +284,8 @@ type Identity struct {
 	Local bool `json:""`
 	EntityId int64 `json:"entityId,omitempty"`
 	ComparableValue string `json:"comparableValue"`
+	CreationTs int64 `json:"creationTs"`
+	UpdateTs int64 `json:"updateTs"`
 }
 
 type CredentialInfo struct {
