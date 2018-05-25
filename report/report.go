@@ -3,11 +3,9 @@ package report
 import (
 	"fmt"
 	"os"
-	"encoding/csv"
 	"time"
 	"clarin/unity-cli/api"
 	"strings"
-	"encoding/json"
 	"runtime"
 )
 
@@ -22,6 +20,8 @@ type AnonymousReportEntity struct {
 	LastAuthn string `json:"last_auth"`
 	DaysSinceLastAuthentication int `json:"days_since_last_auth"`
 	Purpose string `json:purpose`
+	Created string `json:"created"`
+	Updated string `json:"updated"`
 }
 
 func (e *AnonymousReportEntity) StringArrayHeader() ([]string) {
@@ -35,11 +35,14 @@ type PersonalReportEntity struct {
 	FullName string `json:full_name`
 	Member string `json:"member"`
 	Email string `json:"email"'`
+	Created string `json:"created"`
+	Updated string `json:"updated"`
 	Domain string `json:"domain"`
 	Country string `json:"county"`
 	LastAuthn string `json:"last_auth"`
 	DaysSinceLastAuthentication int `json:"days_since_last_auth"`
-	Purpose string `json:purpose`
+	Purpose string `json:"purpose"`
+	Motivation string `json:"motivation"`
 }
 
 func (e *PersonalReportEntity) StringArrayHeader() ([]string) {
@@ -59,7 +62,6 @@ func (r *Report) reset() {
  * Not processed:
  *
  *		e.GetAttributeValuesAsString("clarin-lr-list"),
- *		e.GetAttributeValuesAsString("clarin-motivation"),
  *		e.GetAttributeValuesAsString("cn"),
  *
  */
@@ -74,7 +76,7 @@ func (r *Report) Compute(entities []api.Entity) {
 		//personal attributes
 		full_name := e.GetAttributeValuesAsString("clarin-full-name")
 		member := e.GetAttributeValuesAsString("member")
-		email := getEmail(e)
+		email, created, updated := getEmail(e)
 		motivation := e.GetAttributeValuesAsString("clarin-motivation")
 		//anonymous attributes
 		domain := r.getEmailDomain(email)
@@ -89,17 +91,22 @@ func (r *Report) Compute(entities []api.Entity) {
 		 	LastAuthn: last_auth,
 		 	DaysSinceLastAuthentication: days_since_last_auth,
 		 	Purpose: purpose,
+			Created: r.timeToString(created),
+			Updated: r.timeToString(updated),
 		 })
 
 		r.personal_report_entities = append(r.personal_report_entities, PersonalReportEntity{
 			FullName: full_name,
 			Member: member,
 			Email: email,
+			Created: r.timeToString(created),
+			Updated: r.timeToString(updated),
 			Domain: domain,
 			Country: country,
 			LastAuthn: last_auth,
 			DaysSinceLastAuthentication: days_since_last_auth,
 			Purpose: purpose,
+			Motivation: motivation,
 		})
 
 		if full_name == "" {
@@ -112,21 +119,14 @@ func (r *Report) Compute(entities []api.Entity) {
 			no_motivation = append(no_motivation, fmt.Sprintf("%s\t%d", email, e.Id))
 		}
  	}
+}
 
-	fmt.Printf("No full name value:\n")
- 	for _, v := range no_full_name {
- 		fmt.Printf("%s\n", v)
+func (r *Report) timeToString(t *time.Time) (string) {
+	result := "-"
+	if t != nil {
+		result = t.String()
 	}
-
-	fmt.Printf("No member value:\n")
-	for _, v := range no_member {
-		fmt.Printf("%s\n", v)
-	}
-
-	fmt.Printf("No motivation value:\n")
-	for _, v := range no_motivation {
-		fmt.Printf("%s\n", v)
-	}
+	return result
 }
 
 func (r *Report) getDaysSinceLastAuth(last_auth string) (int) {
@@ -144,14 +144,21 @@ func (r *Report) getDaysSinceLastAuth(last_auth string) (int) {
 	return days_since_last_auth
 }
 
-func getEmail(e api.Entity) (string) {
+func getEmail(e api.Entity) (string, *time.Time, *time.Time) {
 	email_identity := "unkown"
+	var created *time.Time
+	var updated *time.Time
+
 	for _, id := range e.Identities {
 		if id.TypeId == "email" {
 			email_identity = id.Value
+			tCreated := time.Unix(0, id.CreationTs*1000000)
+			tUpdated := time.Unix(0, id.UpdateTs*1000000)
+			created = &tCreated
+			updated = &tUpdated
 		}
 	}
-	return email_identity
+	return email_identity, created, updated
 }
 
 func (r *Report) getEmailDomain(email string) (string) {
@@ -162,117 +169,34 @@ func (r *Report) getEmailDomain(email string) (string) {
 	return domain
 }
 
-func (r *Report) Write(kind, output_format string) {
+func (r *Report) GetReport(kind string) (interface{}) {
+	switch kind {
+	case "anonymous": return r.anonymous_report_entities
+	case "personal": return r.personal_report_entities
+	}
+	return nil
+}
 
-	if kind == "anonymous" || kind == "both" {
-		if output_format == "csv" || output_format == "tsv" {
-			tsv := output_format == "tsv"
-			r.writeAnonymouseSeparated(tsv)
-		} else if output_format == "json" {
-
-		} else if output_format == "google" {
-
-		} else {
-
+func (r *Report) GetReportAsArray(kind string) ([][]string) {
+	if kind == "personal" {
+		header := PersonalReportEntity{}
+		data := [][]string{header.StringArrayHeader()}
+		for _, e := range r.personal_report_entities {
+			data = append(data, e.AsStringArray())
 		}
+		return data
 	}
 
-	if kind == "personal" || kind == "both" {
-		if output_format == "csv" || output_format == "tsv" {
-			tsv := output_format == "tsv"
-			r.writePersonalSeparated(tsv)
-		} else if output_format == "json" {
-
-		} else if output_format == "google" {
-
-		} else {
-
+	if kind == "anonymous" {
+		header := AnonymousReportEntity{}
+		data := [][]string{header.StringArrayHeader()}
+		for _, e := range r.anonymous_report_entities {
+			data = append(data, e.AsStringArray())
 		}
-	}
-}
-
-func (r *Report) writeSeparatedValues(kind, ext, sep string) {
-
-}
-
-func (r *Report) PrettyPrint() {
-	/*
-	fmt.Printf("#accounts : %d\n", r.General.Num_accounts)
-	fmt.Printf("   #active: %d\n", r.General.Num_authenticated_accounts)
-	r.printMap(r.Domains, "Domains")
-	r.printMap(r.Countries, "Country")
-	r.printMapInt64(r.Last_auths, "Last authenticated")
-	*/
-}
-
-func (r *Report) addToMap(m map[string]int64, key string) (map[string]int64) {
-	if _, ok := m[key]; !ok {
-		m[key] = 1
-	} else {
-		m[key] += 1
-	}
-	return m
-}
-
-func (r *Report) PrettyAsJson() {
-	json_bytes, err := json.MarshalIndent(r.anonymous_report_entities, "", "  ")
-	if err != nil {
-		fmt.Printf("Failed to marshall JSON. Error: %v\n", err)
-	}
-	fmt.Printf("%s\n", string(json_bytes))
-}
-
-func (r *Report) writeAsJson() {
-
-}
-
-func (r *Report) writePersonalSeparated(tsv bool) {
-	ext := "csv"
-	if tsv {
-		ext = "tsv"
+		return data
 	}
 
-	header := PersonalReportEntity{}
-	data := [][]string{	header.StringArrayHeader() }
-	for _, e := range r.personal_report_entities {
-		data = append(data, e.AsStringArray())
-	}
-	r.writeCsv(fmt.Sprintf("%s.%s", "personal_report", ext), data, tsv)
-}
-
-func (r *Report) writeAnonymouseSeparated(tsv bool) {
-	ext := "csv"
-	if tsv {
-		ext = "tsv"
-	}
-
-	header := AnonymousReportEntity{}
-	data := [][]string{	header.StringArrayHeader() }
-	for _, e := range r.anonymous_report_entities {
-		data = append(data, e.AsStringArray())
-	}
-	r.writeCsv(fmt.Sprintf("%s.%s", "anonymous_report", ext), data, tsv)
-}
-
-func (r *Report) writeCsv(filename string, data [][]string, tsv bool) {
-	file, err := r.GetFile(filename)
-	if err != nil {
-		fmt.Printf("Cannot create file: %v\n", err)
-	}
-	defer file.Close()
-
-	writer := csv.NewWriter(file)
-	if tsv {
-		writer.Comma = '\t'
-	}
-	defer writer.Flush()
-
-	for _, value := range data {
-		err := writer.Write(value)
-		if err != nil {
-			fmt.Printf("Cannot write to file: %v\n", err)
-		}
-	}
+	return nil
 }
 
 func (r *Report) UserHomeDir() string {
@@ -286,9 +210,11 @@ func (r *Report) UserHomeDir() string {
 }
 
 func (r *Report) GetFile(filename string) (*os.File, error) {
-	basename := "unity_reporting"
+
 	dir := r.UserHomeDir()
-	base := fmt.Sprintf("%s/%s", dir, basename)
+	basename := "unity_reporting"
+	subdir := time.Now().Format("2006-01-02")
+	base := fmt.Sprintf("%s/%s/%s", dir, basename, subdir)
 
 	if _, err := os.Stat(base); os.IsNotExist(err) {
 		fmt.Printf("Creating %s\n", base)

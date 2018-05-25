@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"clarin/unity-cli/report"
+	"encoding/csv"
 )
 
 func CreateRepairCommand(globalFlags *GlobalFlags) (*cobra.Command) {
@@ -52,10 +53,10 @@ func CreateRepairCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 			d = time.Since(t1)
 			fmt.Printf("Analyzed %d and repaired %d entitites in %.3fms\n", len(entities), repaired, float64(d.Nanoseconds())/1000000.0)
 
-			/*
-			 * Export results
-			 */
+			ExportJson("repair.json", repaired_entities)
 
+
+			/*
 			filename := "repair.json"
 			fmt.Printf("Writing result to: %s\n", filename)
 
@@ -76,6 +77,7 @@ func CreateRepairCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 				fmt.Printf("Failed to write json data to file. Error: %s\n", err)
 				return
 			}
+			*/
 		},
 	}
 
@@ -106,4 +108,58 @@ func CreateClientAndGetEntities(globalFlags *GlobalFlags) (*api.UnityApiV1, []ap
 	}
 
 	return client, entities, nil
+}
+
+
+/*
+ * Export results
+ */
+func ExportJson(filename string, data interface{}) {
+	fmt.Printf("Exporting results\n")
+
+	//json_bytes, err := json.Marshal(data)
+	json_bytes, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		fmt.Printf("Failed to marshall to json: %s\n", err)
+		return
+	}
+
+	r := report.Report{}
+	file, err := r.GetFile(filename)
+	if err != nil {
+		fmt.Printf("Failed to create file. Error: %s\n", err)
+		return
+	}
+	err = ioutil.WriteFile(file.Name(), json_bytes, 0644)
+	if err != nil {
+		fmt.Printf("Failed to write json data to file. Error: %s\n", err)
+		return
+	}
+
+	fmt.Printf("Succesfully exported results to %s\n", file.Name())
+}
+
+func ExportSeparated(filename string, data [][]string, separator rune) {
+	fmt.Printf("Exporting results\n")
+
+	r := report.Report{}
+	file, err := r.GetFile(filename)
+	if err != nil {
+		fmt.Printf("Failed to create file. Error: %s\n", err)
+		return
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	writer.Comma = separator
+	defer writer.Flush()
+
+	for _, value := range data {
+		err := writer.Write(value)
+		if err != nil {
+			fmt.Printf("Cannot write to file: %v\n", err)
+		}
+	}
+
+	fmt.Printf("Succesfully exported results to %s\n", file.Name())
 }

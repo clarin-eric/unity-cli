@@ -8,6 +8,7 @@ import (
 	"time"
 	"clarin/unity-cli/report"
 
+	"strings"
 )
 
 type int64arr []int64
@@ -17,67 +18,9 @@ func (a int64arr) Less(i, j int) bool { return a[i] < a[j] }
 
 func CreateReportCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 	var (
-		output string
+		outputs string
 		kind string
-		fix_attributes bool
 	)
-
-	var TestReport = &cobra.Command{
-		Use:   "test",
-		Short: "Resolve an identity",
-		Long:  `Resolve an identity based on type and value. This yields the same output as "entities ls".`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			client, err := createUnityClient(globalFlags)
-			if err != nil {
-				fmt.Printf("Failed to initialize unity client. Error: %v\n", err)
-				return nil
-			}
-
-			attributes, err := client.GetAttributes(261, "/")
-			if err != nil {
-				fmt.Printf("%s\n", err)
-				return nil
-			}
-
-			for _, a := range attributes {
-				fmt.Printf("%50s %20s %20s\n", a.Name, a.GroupPath,  a.Visibility)
-				for _, v := range a.Values {
-					fmt.Printf("  %s\n", v)
-				}
-			}
-
-			return nil
-		},
-	}
-
-	var TestUpdateReport = &cobra.Command{
-		Use:   "test-update",
-		Short: "Resolve an identity",
-		Long:  `Resolve an identity based on type and value. This yields the same output as "entities ls".`,
-		Run: func(cmd *cobra.Command, args []string) {
-			client, err := createUnityClient(globalFlags)
-			if err != nil {
-				fmt.Printf("Failed to initialize unity client. Error: %v\n", err)
-			}
-
-			fmt.Printf("Fetching list of entities\n")
-			t1 := time.Now()
-			entities, err := GetAllEntitiesForGroupWithClient(globalFlags, "/clarin", client)
-			if err != nil {
-				fmt.Printf("Failed to fecth entities. Error: %v\n", err)
-				os.Exit(1)
-			}
-			d := time.Since(t1)
-
-			fmt.Printf("Fetched list of %d entitites in %.3fms\n", len(entities), float64(d.Nanoseconds())/1000000.0)
-
-
-
-			for _, entity := range entities {
-				entity.RepairAttributeSet(client)
-			}
-		},
-	}
 
 	var ReportMissingAttributesCmd = &cobra.Command{
 		Use:   "missing_attributes",
@@ -94,25 +37,27 @@ func CreateReportCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 			}
 			d := time.Since(t1)
 
-			fmt.Printf("Generated in %dns\n", d.Nanoseconds())
+			fmt.Printf("Generated missing attributes in %dns\n", d.Nanoseconds())
 
 			attribute_set := []string{"clarin-full-name", "member", "clarin-motivation"}
 			report.Compute(entities, attribute_set)
 
-			fmt.Printf("Json:\n%s\n", string(report.ToJson()))
+			//for _, o := range SplitOutputs(outputs) {
+			ExportJson("report_missing_attributes.json", report)
+			//}
 
 			return nil
 		},
 	}
-	ReportMissingAttributesCmd.Flags().BoolVar(&fix_attributes, "fix",  false,"Fix missing attribute values by setting default values")
+	ReportMissingAttributesCmd.Flags().StringVarP(&outputs, "outputs", "o", "json", "List of output formats (comma separated). Supported values: json")
 
 	//
 	// Root command
 	//
 	var ReportStatsCmd = &cobra.Command{
-		Use:   "report",
-		Short: "Report commands",
-		Long:  `Report informaton.`,
+		Use:   "entities",
+		Short: "Report entities",
+		Long:  `Report entity informaton.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			report := report.Report{}
 
@@ -133,14 +78,35 @@ func CreateReportCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 			}
 			d := time.Since(t1)
 
-			fmt.Printf("Generated in %dns\n", d.Nanoseconds())
+			fmt.Printf("Generated entity report in %dns\n", d.Nanoseconds())
 
 			report.Compute(entities)
-			report.Write(kind, output)
 
+			for _, o := range SplitOutputs(outputs) {
+				if o == "tsv" || o == "csv" {
+					separator := GetSeparator(o)
+					if kind == "both" {
+						ExportSeparated(fmt.Sprintf("%s_report.%s", "anonymous", o), report.GetReportAsArray("anonymous"), separator)
+						ExportSeparated(fmt.Sprintf("%s_report.%s", "personal", o), report.GetReportAsArray("personal"), separator)
+					} else {
+						ExportSeparated(fmt.Sprintf("%s_report.%s", kind, o), report.GetReportAsArray(kind), separator)
+					}
+				} else if o == "json" {
+					if kind == "both" {
+						ExportJson(fmt.Sprintf("%s_report.json", "anonymous"), report.GetReport("anonymous"))
+						ExportJson(fmt.Sprintf("%s_report.json", "personal"), report.GetReport("personal"))
+					} else {
+						ExportJson(fmt.Sprintf("%s_report.json", kind), report.GetReport(kind))
+					}
+				} else {
+					fmt.Printf("Unsupported output format: %s\n", o)
+				}
+			}
 			return nil
 		},
 	}
+	ReportStatsCmd.Flags().StringVarP(&outputs, "outputs", "o", "json", "List of output formats (comma separated). Supported values: json,csv,tsv")
+	ReportStatsCmd.Flags().StringVarP(&kind, "type", "t", "both", "Type of output. Supported values: anonymous,personal,both")
 
 	//
 	// Root command
@@ -150,10 +116,7 @@ func CreateReportCommand(globalFlags *GlobalFlags) (*cobra.Command) {
 		Short: "Report commands",
 		Long:  `Report informaton.`,
 	}
-
-	ReportCmd.AddCommand(ReportMissingAttributesCmd, ReportStatsCmd, TestReport, TestUpdateReport)
-	ReportCmd.PersistentFlags().StringVarP(&output, "output", "o", "pretty", "Output format. Supported values: pretty,json,csv,tsv,google")
-	ReportCmd.PersistentFlags().StringVarP(&kind, "type", "t", "both", "Type of output. Supported values: anonymous,personal,both")
+	ReportCmd.AddCommand(ReportMissingAttributesCmd, ReportStatsCmd)
 
 	return ReportCmd
 }
@@ -191,4 +154,16 @@ func GetAllEntitiesForGroupWithClient(globalFlags *GlobalFlags, group_path strin
 	}
 
 	return entities, nil
+}
+
+func GetSeparator(output string) (rune) {
+	separator := ','
+	if output == "tsv" {
+		separator = '\t'
+	}
+	return separator
+}
+
+func SplitOutputs(outputs string) ([]string) {
+	return strings.Split(outputs, ",")
 }
