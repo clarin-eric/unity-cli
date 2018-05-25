@@ -25,10 +25,10 @@ type AnonymousReportEntity struct {
 }
 
 func (e *AnonymousReportEntity) StringArrayHeader() ([]string) {
-	return []string {"domain", "country", "last_authn", "days_since_last_authn", "purpose"}
+	return []string {"domain", "country", "last_authn", "days_since_last_authn", "purpose", "created", "updated"}
 }
 func (e *AnonymousReportEntity) AsStringArray() ([]string) {
-	return []string {e.Domain, e.Country, e.LastAuthn, fmt.Sprintf("%d", e.DaysSinceLastAuthentication), e.Purpose}
+	return []string {e.Domain, e.Country, e.LastAuthn, fmt.Sprintf("%d", e.DaysSinceLastAuthentication), e.Purpose, e.Created, e.Updated}
 }
 
 type PersonalReportEntity struct {
@@ -46,10 +46,10 @@ type PersonalReportEntity struct {
 }
 
 func (e *PersonalReportEntity) StringArrayHeader() ([]string) {
-	return []string {"full_name", "member", "email", "domain", "country", "last_authn", "days_since_last_authn", "purpose"}
+	return []string {"full_name", "member", "email", "domain", "country", "last_authn", "days_since_last_authn", "purpose", "motivation", "created", "updated"}
 }
 func (e *PersonalReportEntity) AsStringArray() ([]string) {
-	return []string {e.FullName, e.Member, e.Email, e.Domain, e.Country, e.LastAuthn, fmt.Sprintf("%d", e.DaysSinceLastAuthentication), e.Purpose}
+	return []string {e.FullName, e.Member, e.Email, e.Domain, e.Country, e.LastAuthn, fmt.Sprintf("%d", e.DaysSinceLastAuthentication), e.Purpose, e.Motivation, e.Created, e.Updated}
 }
 
 
